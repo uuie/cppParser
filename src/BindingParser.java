@@ -56,6 +56,17 @@ public class BindingParser {
                 String[] signs=line.split(",");
                 String sign=signs[1].replaceAll("\\s*\"?\\.?([^\\)]+).+","$1");
                 String cfname=signs[2].replaceAll("\\s*([^\\)]+).+","$1");
+
+                int cfIndex=0;
+                try{
+                    cfIndex=Integer.parseInt(cfname.substring(cfname.length()-2));
+                }catch(Exception e){
+
+                }
+                if(cfIndex>0){
+                    sign=sign+"~~"+cfIndex;
+                    System.out.println(sign);
+                }
                 List<String> params=fp.functions.get(cfname);
 //                if(params==null)
 //                {

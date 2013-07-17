@@ -28,70 +28,168 @@ public class Main {
         BindingParser bp = new BindingParser();
         bp.init();
         bp.fp = fp;
-
-        parseFile("/Users/chris/Desktop/quick-cocos2d-x/lib/cocos2dx_extensions_luabinding/cocos2dx_extensions_luabinding.cpp", fp, bp);
-        parseFile("/Users/chris/Desktop/quick-cocos2d-x/lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_luabinding.cpp", fp, bp);
-        parseFile("/Users/chris/Desktop/quick-cocos2d-x/lib/cocos2d-x/scripting/lua/cocos2dx_support/LuaCocos2d.cpp", fp, bp);
-        parseFile("/Users/chris/Desktop/quick-cocos2d-x/lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_ios_iap_luabinding.cpp",fp,bp);
-        parseFile("/Users/chris/Desktop/quick-cocos2d-x/lib/cocos2d-x/scripting/lua/tolua/tolua_map.c",fp,bp);
-        File f = new File("/Users/chris/Desktop/bingexport/lua.complete");
-        if (f.exists())
-            f.delete();
+        String[] files={"lib/cocos2d-x/scripting/lua/cocos2dx_support/Lua_extensions_CCB.cpp" ,
+                "lib/cocos2d-x/scripting/lua/cocos2dx_support/LuaCocos2d.cpp" ,
+                "lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_ios_iap_luabinding.cpp" ,
+                "lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_luabinding.cpp" ,
+                "lib/third_party/chipmunk/luabinding/CCPhysicsWorld_luabinding.cpp",
+                "lib/third_party/CSArmature/luabinding/CSArmature_luabinding.cpp",
+        "lib/cocos2d-x/scripting/lua/tolua/tolua_map.c"}    ;
+        for(String f:files){
+            parseFile("/Users/user/Desktop/192.168.1.2/qc2d/trunk/quick-cocos2d-x/"+f,fp,bp);
+        }
+//        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2dx_extensions_luabinding/cocos2dx_extensions_luabinding.cpp", fp, bp);
+//        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_luabinding.cpp", fp, bp);
+//        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2d-x/scripting/lua/cocos2dx_support/LuaCocos2d.cpp", fp, bp);
+//        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_ios_iap_luabinding.cpp",fp,bp);
+//        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2d-x/scripting/lua/tolua/tolua_map.c",fp,bp);
+//        File f = new File("/Users/user/lua.complete.json");
+//        if (f.exists())
+//            f.delete();
         for (String key : bp.functions.keySet()) {
-//            writeFiles(key,bp.functions.get(key));
             writeFilesForSublime(key, bp.functions.get(key));
 
         }
         writeFilesForSublime(null, null);
-
+//        for (String key : bp.functions.keySet()) {
+//            writeFilesForEclipse(key, bp.functions.get(key));
+//
+//        }
         return;
     }
 
-    private static void writeFiles(String module, Map<String, List<String>> funcs) throws IOException {
-        String dir = "/Users/chris/Desktop/bingexport";
+    private static void writeFilesForEclipse(String module, Map<String, List<String>> funcs) throws IOException {
+        String dir = "/Users/user/ec";
         File fdir = new File(dir);
         if (!fdir.exists())
             fdir.mkdirs();
         File f = new File(fdir.getAbsolutePath() + "/" + module + ".lua");
         f.createNewFile();
         PrintWriter ptr = new PrintWriter(new FileWriter(f));
-        ptr.println("module \"" + module + "\"");
+        ptr.println("-- @module " + module);
+        ptr.println();
+        ptr.println("-----------------------");
         for (String fname : funcs.keySet()) {
 //            ptr.print(module+"."+fname+"=function");
-            ptr.print("function " + fname);
-
-            ptr.print("(");
             List<String> args = funcs.get(fname);
             String argSign = "";
-            for (String arg : args) {
-                argSign += arg + ",";
+            if(args==null){
+                continue;
             }
-            ptr.print(argSign.substring(0, argSign.length() - 1));
-            ptr.print(")");
-            ptr.println("end");
+
+            ptr.println("-- @function [parent=#"+module+"] " + fname);
+
+            boolean firstarg=true;
+            for (String arg : args) {
+                if(firstarg && arg.substring(1).equals(module))
+                    arg="self";
+                firstarg=false;
+                ptr.println("-- @param  "+arg);
+//                argSign += arg + ",";
+            }
+//            if(argSign.length()>0)
+//                ptr.print(argSign.substring(0, argSign.length() - 1));
+//            ptr.print(")");
+            ptr.println();
+            ptr.println("-----------------------");
         }
-//        ptr.println("return "+module);
+        ptr.println("return nil");
         ptr.close();
 
     }
 
 
     private static void writeFilesForSublime(String module, Map<String, List<String>> funcs) throws IOException {
-        String dir = "/Users/chris/Desktop/bingexport";
+        String dir = "/Users/user/Desktop/bingexport";
         File fdir = new File(dir);
         if (!fdir.exists())
             fdir.mkdirs();
-        File f = new File(fdir.getAbsolutePath() + "/lua.complete");
-        if (!f.exists())
-            f.createNewFile();
+        File f = new File(fdir.getAbsolutePath() + "/lua.sublime-completions");
 
+
+        String header="{\n" +
+                "\t\"scope\":\"source.lua - keyword.control.lua - constant.language.lua - string\",\n" +
+                "\t\"completions\":[\n" +
+                "\t\t\"in\",\n" +
+                "\t\t\"else\",\n" +
+                "\t\t\"return\",\n" +
+                "\t\t\"false\",\n" +
+                "\t\t\"true\",\n" +
+                "\t\t\"break\",\n" +
+                "\t\t\"or\",\n" +
+                "\t\t\"and\",";
+        String footer="{\n" +
+                "\t\t\t\"trigger\":\"cjson_encode()\",\n" +
+                "\t\t\t\"contents\":\"cjson.encode()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_decode()\",\n" +
+                "\t\t\t\"contents\":\"cjson.decode()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_encode_sparse_array()\",\n" +
+                "\t\t\t\"contents\":\"cjson.encode_sparse_array()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_encode_max_depth()\",\n" +
+                "\t\t\t\"contents\":\"cjson.encode_max_depth()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_decode_max_depth()\",\n" +
+                "\t\t\t\"contents\":\"cjson.decode_max_depth()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_encode_number_precision()\",\n" +
+                "\t\t\t\"contents\":\"cjson.encode_number_precision()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_encode_keep_buffer()\",\n" +
+                "\t\t\t\"contents\":\"cjson.encode_keep_buffer()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_encode_invalid_numbers()\",\n" +
+                "\t\t\t\"contents\":\"cjson.encode_invalid_numbers()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_decode_invalid_numbers()\",\n" +
+                "\t\t\t\"contents\":\"cjson.decode_invalid_numbers()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"cjson_new()\",\n" +
+                "\t\t\t\"contents\":\"cjson.new()\"\n" +
+                "\t\t},\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"zlib_deflate()\",\n" +
+                "\t\t\t\"contents\":\"zlib.deflate()\"\n" +
+                "\t\t}\n" +
+                "\t\t,\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"zlib_inflate()\",\n" +
+                "\t\t\t\"contents\":\"zlib.inflate()\"\n" +
+                "\t\t}\n" +
+                "\t\t,\n" +
+                "\t\t{\n" +
+                "\t\t\t\"trigger\":\"zlib_version()\",\n" +
+                "\t\t\t\"contents\":\"zlib.version()\"\n" +
+                "\t\t}\n" +
+                "\t\t,\n" +
+                "\t\t{\n" +
+                "\t\t\t\n" +
+                "\t\t}\n" +
+                "\t\t\n" +
+                "\t]\n" +
+                "}";
         PrintWriter ptr = new PrintWriter(new FileWriter(f, true));
+        if (f.length()==0L){
+            ptr.println(header);
+        }
         String line = "{ \"trigger\": \"%s\\t%s\", \"contents\": \"%s\"},";
 
         if(module==null){
             for(String str:CONSTS){
                 ptr.println(String.format(line,str,str,str));
             }
+            ptr.println(footer);
             ptr.close();
             return;
         }
@@ -102,9 +200,7 @@ public class Main {
             // ptr.print("function "+fname);
             List<String> args = funcs.get(fname);
             String argSign = "";
-            if (fname.equals("create")) {
-                boolean isCreate = args.get(0).endsWith(module);
-            }
+
             if(args==null)    {
                 args=new ArrayList<String>();
             }
@@ -121,16 +217,25 @@ public class Main {
             String content = null;
             String seprator=(!module.equals(""))?".":"";
             if (isClassMethod) {
-                func = ":" + fname;
+                func = (":" + fname).replace("~~","");
+                fname=fname.replaceAll("~~\\d+$","");
+
                 content = ":" + fname + "(" + argSign + ")";
                 desc = String.format("%s:%s(%s)", module, fname, argSign);
             } else {
-                func = "." + fname;
+                func = ("." + fname).replace("~~","");
+                fname=fname.replaceAll("~~\\d+$","");
                 content = seprator + fname + "(" + argSign + ")";
                 desc = String.format("%s"+seprator+"%s(%s)", module, fname, argSign);
             }
 
              seprator=(!module.equals(""))?"_":"";
+
+
+//            if(s.indexOf("~~")>0){
+//              System.out.println();
+//            }
+
             ptr.println(String.format(line, (module + seprator + func.substring(1)), desc, module+content));
             if(isClassMethod)
                  ptr.println(String.format(line, func, desc, content.substring(1)));
