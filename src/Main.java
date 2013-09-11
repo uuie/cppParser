@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class Main {
     static List<String> CONSTS=new ArrayList<String>();
+    static String targetDir=null;
     static class ConstParser{
         public void parse(String line){
             if(line.indexOf("tolua_constant")>=0 && line.indexOf("tolua_S")>=0){
@@ -22,7 +23,8 @@ public class Main {
     }
     static ConstParser CP=new ConstParser();
     public static void main(String[] args) throws IOException {
-
+        String baseDir=args[0];
+        Main.targetDir=args[1];
         FunctionParser fp = new FunctionParser();
         fp.init();
         BindingParser bp = new BindingParser();
@@ -36,7 +38,7 @@ public class Main {
                 "lib/third_party/CSArmature/luabinding/CSArmature_luabinding.cpp",
         "lib/cocos2d-x/scripting/lua/tolua/tolua_map.c"}    ;
         for(String f:files){
-            parseFile("/Users/user/Desktop/192.168.1.2/qc2d/trunk/quick-cocos2d-x/"+f,fp,bp);
+            parseFile(baseDir+"/"+f,fp,bp);
         }
 //        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2dx_extensions_luabinding/cocos2dx_extensions_luabinding.cpp", fp, bp);
 //        parseFile("/Users/user/github/quick-cocos2d-x/lib/cocos2dx_extra/extra/luabinding/cocos2dx_extra_luabinding.cpp", fp, bp);
@@ -96,11 +98,25 @@ public class Main {
         ptr.println("return nil");
         ptr.close();
 
+        String gl="#ifdef GL_ES\n" +
+                "precision mediump float;\n" +
+                "#endif\n" +
+                "uniform sampler2D u_texture;\n" +
+                "varying vec2 v_texCoord;\n" +
+                "varying vec4 v_fragmentColor;\n" +
+                "void main(void)\n" +
+                "{\n" +
+                "// Convert to greyscale using NTSC weightings\n" +
+                "float alpha = texture2D(u_texture, v_texCoord).a;\n" +
+                "float grey = dot(texture2D(u_texture, v_texCoord).rgb, vec3(0.299, 0.587, 0.114));\n" +
+                "gl_FragColor = vec4(grey, grey, grey, alpha);\n" +
+                "}";
+
     }
 
 
     private static void writeFilesForSublime(String module, Map<String, List<String>> funcs) throws IOException {
-        String dir = "/Users/user/Desktop/bingexport";
+        String dir = Main.targetDir;
         File fdir = new File(dir);
         if (!fdir.exists())
             fdir.mkdirs();
